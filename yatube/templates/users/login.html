@@ -1,0 +1,19 @@
+{% extends "base_form.html" %}
+{% block title %}Войти{% endblock %}
+
+{% block first_message %}
+Войти на сайт
+{% endblock %}
+
+{% block button %}
+Войти
+{% endblock %}
+
+{% block href %}
+<a href="{% url 'users:password_reset_form' %}" class="btn btn-link">
+  Забыли пароль?
+</a>
+{% endblock %}
+
+
+
