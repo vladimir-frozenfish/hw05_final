@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.conf import settings
+from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -172,3 +173,46 @@ class PostsPagesTests(TestCase):
         )
         self.assertEqual(len(response.context['page_obj']),
                          self.count_post_author - settings.PAGINATOR_COUNT)
+
+
+class PostsCacheTests(TestCase):
+    """тестрирование кэша"""
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        cls.user = User.objects.create_user(username='TestCacheName')
+
+        cls.post = Post.objects.create(
+            text='Text for cache',
+            author=cls.user
+        )
+
+    def setUp(self):
+        self.guest_client = Client()
+
+    def test_cache_index(self):
+        """тестирование кэша главной страницы"""
+
+        """очистка кэша от предыдущих тестов"""
+        cache.clear()
+
+        """запрос на страницу с новой записью"""
+        self.guest_client.get(reverse('posts:index'))
+
+        """удаление поста"""
+        self.post.delete()
+
+        """получение запроса на главной странице с уже удаленной записью из базы данных"""
+        response = self.guest_client.get(reverse('posts:index'))
+
+        """проверка, что кэш работает"""
+        self.assertIn(self.post.text, response.content.decode('utf-8'))
+
+        """очистка кэша и проверка, что удаленной записи нет на главной странице"""
+        cache.clear()
+        response = self.guest_client.get(reverse('posts:index'))
+        self.assertNotIn(self.post.text, response.content.decode('utf-8'))
+
+
+
