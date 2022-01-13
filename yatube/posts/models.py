@@ -62,7 +62,7 @@ class Comment(models.Model):
         verbose_name='Автор')
     text = models.TextField(verbose_name='Комментарий')
     created = models.DateTimeField(auto_now_add=True,
-                                    verbose_name='Время комментария')
+                                   verbose_name='Время комментария')
 
     class Meta:
         verbose_name_plural = 'Комментарии'
@@ -71,3 +71,31 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text[:15]
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User,
+        unique=True,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Подписчик'
+    )
+    author = models.ManyToManyField(
+        User,
+        #on_delete=models.CASCADE,
+        symmetrical=False,
+        related_name='following',
+        verbose_name='Автор_на_которого_подписывается'
+    )
+
+    def get_following(self):
+        """получение списка авторов на которых подписан юзер"""
+        return ', '.join([author.username for author in self.author.all()])
+
+    get_following.short_description = 'Подписки на авторов'
+
+    class Meta:
+        verbose_name_plural = 'Подписки'
+        verbose_name = 'Подписка'
+        # ordering = ['']

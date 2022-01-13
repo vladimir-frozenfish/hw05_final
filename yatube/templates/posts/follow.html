@@ -1,16 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %} Последние обновления на сайте {% endblock %}
+{% block title %} Записи, авторов на которых вы подписаны {% endblock %}
 
 {% block content %}
 
 {% load cache %}
-{% cache 20 index_page %}
+{% cache 20 follow_page %}
 
   <div class="container">
-    <h1> Последние обновления на сайте </h1>
+    <h1> Записи, авторов на которых вы подписаны </h1>
 
-       {% include 'posts/includes/switcher.html' %}
+      {% include 'posts/includes/switcher.html' %}
 
       {% for post in page_obj %}
 

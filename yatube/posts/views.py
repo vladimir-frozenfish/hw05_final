@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.views.decorators.cache import cache_page
 
 from .forms import CommentForm, PostForm
-from .models import Group, Post
+from .models import Follow, Group, Post
 
 
 User = get_user_model()
@@ -19,7 +19,6 @@ def page_paginator(data, request):
 
     return post_list.get_page(page_number)
 
-#@cache_page(60 * 15)
 def index(request):
     template = 'posts/index.html'
     posts = Post.objects.all()
@@ -127,3 +126,42 @@ def post_edit(request, post_id):
                'is_edit': True}
 
     return render(request, template, context)
+
+
+"""функции для работы с подсписками"""
+@login_required
+def follow_index(request):
+    template = 'posts/follow.html'
+
+    user = request.user
+    """получение авторов на которых подписан авторизованный юзер"""
+    followers = Follow.objects.get(user=user).author.all()
+    """получение постов вышеполученных авторов"""
+    posts = Post.objects.filter(author__in=followers)
+
+    page_obj = page_paginator(posts, request)
+
+    context = {'page_obj': page_obj}
+
+    '''
+    print(user)
+    print(followers)
+    print(posts)
+    '''
+
+    return render(request, template, context)
+
+
+
+
+"""
+@login_required
+def profile_follow(request, username):
+    # Подписаться на автора
+    ...
+
+@login_required
+def profile_unfollow(request, username):
+    # Дизлайк, отписка
+    ...
+"""
