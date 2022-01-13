@@ -52,9 +52,13 @@ def profile(request, username):
 
     page_obj = page_paginator(posts, request)
 
+    """получение фолловеров авторизованного юзера"""
+    followers = Follow.objects.get(user=request.user).author.all()
+
     context = {'author': author,
                'page_obj': page_obj,
-               'count_post_author': author.posts.count()}
+               'count_post_author': author.posts.count(),
+               'following': author in followers}
 
     return render(request, template, context)
 
@@ -133,9 +137,8 @@ def post_edit(request, post_id):
 def follow_index(request):
     template = 'posts/follow.html'
 
-    user = request.user
     """получение авторов на которых подписан авторизованный юзер"""
-    followers = Follow.objects.get(user=user).author.all()
+    followers = Follow.objects.get(user=request.user).author.all()
     """получение постов вышеполученных авторов"""
     posts = Post.objects.filter(author__in=followers)
 
@@ -143,25 +146,25 @@ def follow_index(request):
 
     context = {'page_obj': page_obj}
 
-    '''
-    print(user)
-    print(followers)
-    print(posts)
-    '''
-
     return render(request, template, context)
 
 
-
-
-"""
 @login_required
 def profile_follow(request, username):
-    # Подписаться на автора
-    ...
+
+    add_user = username
+    user = Follow.objects.get(user=request.user)
+    print(add_user)
+    print(user.author.all())
+    #user.author.add(add_user)
+    print(user.author.all())
+
+    return redirect('posts:profile', username)
+
+
 
 @login_required
 def profile_unfollow(request, username):
-    # Дизлайк, отписка
+    """Отписаться от автора"""
     ...
-"""
+
