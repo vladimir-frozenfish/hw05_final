@@ -215,4 +215,36 @@ class PostsCacheTests(TestCase):
         self.assertNotIn(self.post.text, response.content.decode('utf-8'))
 
 
+class FollowPagesTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+        """создание юзеров"""
+        cls.user_follower = User.objects.create_user(username='UserFollower')
+        cls.user_author = User.objects.create_user(username='UserAuthor')
+
+    def setUp(self):
+        # self.guest_client = Client()
+        self.authorized_client = Client()
+        user_follower = FollowPagesTests.user_follower
+        self.authorized_client.force_login(user_follower)
+
+    def test_follow_unfollow(self):
+        """тест подписки юзера на автора и отписки от него"""
+        self.authorized_client.get(reverse('posts:profile_follow', kwargs={'username': self.user_author}))
+        self.assertTrue(self.user_author.following.filter(user=self.user_follower).exists())
+
+        self.authorized_client.get(reverse('posts:profile_unfollow', kwargs={'username': self.user_author}))
+        self.assertFalse(self.user_author.following.filter(user=self.user_follower).exists())
+
+
+
+
+
+
+
+
+
+
 
