@@ -76,28 +76,16 @@ class Comment(models.Model):
 class Follow(models.Model):
     user = models.ForeignKey(
         User,
-        #unique=True,
         on_delete=models.CASCADE,
         related_name='follower',
         verbose_name='Подписчик'
     )
     author = models.ForeignKey(
         User,
-        #symmetrical=False,
-        #blank=True,
-        #null=True,
         on_delete=models.CASCADE,
         related_name='following',
         verbose_name='Автор_на_которого_подписывается'
     )
-
-    '''
-    def get_following(self):
-        """получение списка авторов на которых подписан юзер"""
-        return ', '.join([author.username for author in self.author.all()])
-
-    get_following.short_description = 'Подписки на авторов'
-    '''
 
     class Meta:
         verbose_name_plural = 'Подписки'
