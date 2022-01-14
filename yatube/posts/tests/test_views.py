@@ -271,6 +271,17 @@ class FollowPagesTests(TestCase):
                 user=self.user_follower
             ).exists())
 
+    def test_follow_himselfh(self):
+        """тест подписки юзера на самого себя"""
+        self.authorized_client.get(
+            reverse('posts:profile_follow',
+                    kwargs={'username': self.user_follower}))
+        self.assertFalse(
+            self.user_follower.following.filter(
+                user=self.user_follower
+            ).exists()
+        )
+
     def test_follow_index(self):
         """Новая запись пользователя появляется в ленте тех,
         кто на него подписан и не появляется в ленте тех,

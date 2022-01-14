@@ -154,6 +154,9 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
+    if request.user.username == username:
+        return redirect('posts:profile', username)
+
     """авторизованный юзер, который подписывается на авторов"""
     login_user = Follow.objects.filter(user=request.user).first()
 
