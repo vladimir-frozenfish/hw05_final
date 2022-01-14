@@ -150,7 +150,8 @@ class PostCreateFormTests(TestCase):
 
         expected_url = (reverse('users:login')
                         + "?next="
-                        + reverse('posts:add_comment', kwargs={'post_id': self.post.id}))
+                        + reverse('posts:add_comment',
+                                  kwargs={'post_id': self.post.id}))
 
         self.assertRedirects(response, expected_url)
 

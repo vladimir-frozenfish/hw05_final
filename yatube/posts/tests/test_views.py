@@ -203,13 +203,15 @@ class PostsCacheTests(TestCase):
         """удаление поста"""
         self.post.delete()
 
-        """получение запроса на главной странице с уже удаленной записью из базы данных"""
+        """получение запроса на главной странице 
+        с уже удаленной записью из базы данных"""
         response = self.guest_client.get(reverse('posts:index'))
 
         """проверка, что кэш работает"""
         self.assertIn(self.post.text, response.content.decode('utf-8'))
 
-        """очистка кэша и проверка, что удаленной записи нет на главной странице"""
+        """очистка кэша и проверка, что удаленной 
+        записи нет на главной странице"""
         cache.clear()
         response = self.guest_client.get(reverse('posts:index'))
         self.assertNotIn(self.post.text, response.content.decode('utf-8'))
@@ -237,11 +239,22 @@ class FollowPagesTests(TestCase):
 
     def test_follow_unfollow(self):
         """тест подписки юзера на автора и отписки от него"""
-        self.authorized_client.get(reverse('posts:profile_follow', kwargs={'username': self.user_author}))
-        self.assertTrue(self.user_author.following.filter(user=self.user_follower).exists())
+        self.authorized_client.get(
+            reverse('posts:profile_follow',
+                    kwargs={'username': self.user_author}))
+        self.assertTrue(
+            self.user_author.following.filter(
+                user=self.user_follower
+            ).exists()
+        )
 
-        self.authorized_client.get(reverse('posts:profile_unfollow', kwargs={'username': self.user_author}))
-        self.assertFalse(self.user_author.following.filter(user=self.user_follower).exists())
+        self.authorized_client.get(
+            reverse('posts:profile_unfollow',
+                    kwargs={'username': self.user_author}))
+        self.assertFalse(
+            self.user_author.following.filter(
+                user=self.user_follower
+            ).exists())
 
     def test_follow_index(self):
         """Новая запись пользователя появляется в ленте тех,
@@ -249,28 +262,21 @@ class FollowPagesTests(TestCase):
         кто не подписан."""
 
         """фолловер подписывается на автора"""
-        self.authorized_client.get(reverse('posts:profile_follow', kwargs={'username': self.user_author}))
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_follow', kwargs={'username': self.user_author})
+        )
 
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 1)
 
         """фолловер отписывается от автора"""
-        self.authorized_client.get(reverse('posts:profile_unfollow', kwargs={'username': self.user_author}))
+        self.authorized_client.get(
+            reverse(
+                'posts:profile_unfollow',
+                kwargs={'username': self.user_author}
+            )
+        )
 
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 0)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

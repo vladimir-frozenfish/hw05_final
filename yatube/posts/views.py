@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render, redirect
 
@@ -19,6 +18,7 @@ def page_paginator(data, request):
     page_number = request.GET.get('page')
 
     return post_list.get_page(page_number)
+
 
 def index(request):
     template = 'posts/index.html'
@@ -135,7 +135,6 @@ def post_edit(request, post_id):
     return render(request, template, context)
 
 
-"""функции для работы с подсписками"""
 @login_required
 def follow_index(request):
     template = 'posts/follow.html'
@@ -180,4 +179,3 @@ def profile_unfollow(request, username):
     login_user.author.remove(add_user)
 
     return redirect('posts:profile', username)
-

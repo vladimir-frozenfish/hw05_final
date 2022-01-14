@@ -20,6 +20,7 @@ class GroupAdmin(admin.ModelAdmin):
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('text', 'created', 'author', 'post')
 
+
 class FollowAdmin(admin.ModelAdmin):
     list_display = ('user', 'get_following')
 

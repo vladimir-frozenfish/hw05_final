@@ -83,7 +83,6 @@ class Follow(models.Model):
     )
     author = models.ManyToManyField(
         User,
-        #on_delete=models.CASCADE,
         symmetrical=False,
         blank=True,
         null=True,
@@ -100,4 +99,3 @@ class Follow(models.Model):
     class Meta:
         verbose_name_plural = 'Подписки'
         verbose_name = 'Подписка'
-        # ordering = ['']
