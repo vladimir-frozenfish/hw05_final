@@ -76,11 +76,13 @@ class PostsPagesTests(TestCase):
 
         for reverse_name, template in templates_page_names.items():
             with self.subTest(template=template):
+                cache.clear()
                 response = self.authorized_client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
     def test_create_post_page_show_correct_context(self):
         """Шаблон create_post сформирован с правильным контекстом."""
+        cache.clear()
         response = self.authorized_client.get(reverse('posts:post_create'))
 
         form_fields = {
@@ -90,11 +92,13 @@ class PostsPagesTests(TestCase):
 
         for value, expected in form_fields.items():
             with self.subTest(value=value):
+                cache.clear()
                 form_field = response.context['form'].fields[value]
                 self.assertIsInstance(form_field, expected)
 
     def test_edit_post_page_show_correct_context(self):
         """Шаблон edit_post сформирован с правильным контекстом."""
+        cache.clear()
         response = self.authorized_client.get(
             reverse('posts:post_edit', kwargs={'post_id': self.post2.id})
         )
@@ -106,11 +110,13 @@ class PostsPagesTests(TestCase):
 
         for value, expected in form_fields.items():
             with self.subTest(value=value):
+                cache.clear()
                 form_field = response.context['form'].fields[value]
                 self.assertIsInstance(form_field, expected)
 
     def test_post_detail_pages_show_correct_context(self):
         """Шаблон post_detail сформирован с правильным контекстом."""
+        cache.clear()
         response = self.authorized_client.get(
             reverse('posts:post_detail', kwargs={'post_id': self.post2.id})
         )
@@ -127,10 +133,12 @@ class PostsPagesTests(TestCase):
     def test_index_pages_show_correct_context(self):
         """Шаблон index сформирован с правильным контекстом.
         Проверка паджинатора"""
+        cache.clear()
         response = self.authorized_client.get(reverse('posts:index'))
         self.assertEqual(len(response.context['page_obj']),
                          settings.PAGINATOR_COUNT)
 
+        cache.clear()
         response = self.authorized_client.get(
             reverse('posts:index') + '?page=2'
         )
@@ -140,6 +148,7 @@ class PostsPagesTests(TestCase):
     def test_group_list_pages_show_correct_context(self):
         """Шаблон group_list сформирован с правильным контекстом.
         Проверка паджинатора"""
+        cache.clear()
         response = self.authorized_client.get(
             reverse('posts:group_list', kwargs={'slug': self.group.slug})
         )
@@ -147,6 +156,7 @@ class PostsPagesTests(TestCase):
                          settings.PAGINATOR_COUNT)
         self.assertEqual(response.context['group'], self.group)
 
+        cache.clear()
         response = self.authorized_client.get(
             reverse('posts:group_list',
                     kwargs={'slug': self.group.slug}) + '?page=2'
@@ -157,6 +167,7 @@ class PostsPagesTests(TestCase):
     def test_profile_pages_show_correct_context(self):
         """Шаблон profile сформирован с правильным контекстом.
         Проверка паджинатора"""
+        cache.clear()
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': self.user})
         )
@@ -167,6 +178,7 @@ class PostsPagesTests(TestCase):
             response.context['count_post_author'], self.count_post_author
         )
 
+        cache.clear()
         response = self.authorized_client.get(
             reverse('posts:profile',
                     kwargs={'username': self.user}) + '?page=2'
@@ -267,6 +279,7 @@ class FollowPagesTests(TestCase):
                 'posts:profile_follow', kwargs={'username': self.user_author})
         )
 
+        cache.clear()
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 1)
 
@@ -278,5 +291,6 @@ class FollowPagesTests(TestCase):
             )
         )
 
+        cache.clear()
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 0)

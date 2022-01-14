@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -46,6 +47,7 @@ class PostCreateFormTests(TestCase):
             'group': self.group.id,
         }
 
+        cache.clear()
         response = self.authorized_client.post(
             reverse('posts:post_create'),
             data=form_data,
@@ -71,6 +73,7 @@ class PostCreateFormTests(TestCase):
             'text': 'New Test text',
         }
 
+        cache.clear()
         response = self.authorized_client.post(
             reverse('posts:post_edit', kwargs={'post_id': self.post.id}),
             data=form_data,
@@ -96,6 +99,7 @@ class PostCreateFormTests(TestCase):
             'group': self.group.id,
         }
 
+        cache.clear()
         response = self.guest_client.post(
             reverse('posts:post_create'),
             data=form_data,
@@ -118,6 +122,7 @@ class PostCreateFormTests(TestCase):
             'post': self.post,
         }
 
+        cache.clear()
         response = self.authorized_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
             data=form_data,
@@ -142,6 +147,7 @@ class PostCreateFormTests(TestCase):
             'post': self.post,
         }
 
+        cache.clear()
         response = self.guest_client.post(
             reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
             data=form_data,
