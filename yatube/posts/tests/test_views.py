@@ -263,6 +263,11 @@ class FollowPagesTests(TestCase):
             ).exists()
         )
 
+    def test_unfollow(self):
+        """тест отписки от автора"""
+        self.authorized_client.get(
+            reverse('posts:profile_follow',
+                    kwargs={'username': self.user_author}))
         self.authorized_client.get(
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.user_author}))
@@ -271,7 +276,7 @@ class FollowPagesTests(TestCase):
                 user=self.user_follower
             ).exists())
 
-    def test_follow_himselfh(self):
+    def test_follow_himself(self):
         """тест подписки юзера на самого себя"""
         self.authorized_client.get(
             reverse('posts:profile_follow',
