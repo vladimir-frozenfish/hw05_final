@@ -140,7 +140,8 @@ def follow_index(request):
     template = 'posts/follow.html'
 
     """получение авторов на которых подписан авторизованный юзер"""
-    followers = request.user.follower.all().values('author')
+    user = get_object_or_404(User, username=request.user)
+    followers = user.follower.all().values('author')
 
     """получение постов вышеполученных авторов"""
     posts = Post.objects.filter(author__in=followers)
@@ -154,31 +155,23 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
+    author = get_object_or_404(User, username=username)
+
     if request.user.username == username:
         return redirect('posts:profile', username)
 
-    """авторизованный юзер, который подписывается на авторов"""
-    login_user = Follow.objects.filter(user=request.user).first()
-
-    if not login_user:
-        login_user = Follow.objects.create(user=request.user)
-
-    """автор на которого надо подписаться"""
-    add_user = get_object_or_404(User, username=username)
-
-    login_user.author.add(add_user)
+    if not author.following.filter(user=request.user).exists():
+        Follow.objects.create(user=request.user,
+                              author=author)
 
     return redirect('posts:profile', username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    """Отписаться от автора"""
-    login_user = Follow.objects.filter(user=request.user).first()
+    author = get_object_or_404(User, username=username)
 
-    """автор от которого надо отписаться"""
-    add_user = get_object_or_404(User, username=username)
-
-    login_user.author.remove(add_user)
+    user = Follow.objects.get(author=author)
+    user.delete()
 
     return redirect('posts:profile', username)
