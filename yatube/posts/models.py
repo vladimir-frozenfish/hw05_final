@@ -85,6 +85,8 @@ class Follow(models.Model):
         User,
         #on_delete=models.CASCADE,
         symmetrical=False,
+        blank=True,
+        null=True,
         related_name='following',
         verbose_name='Автор_на_которого_подписывается'
     )

@@ -140,15 +140,8 @@ def post_edit(request, post_id):
 def follow_index(request):
     template = 'posts/follow.html'
 
-    followers = request.user.follower.all().values('author')
-
-    '''
     """получение авторов на которых подписан авторизованный юзер"""
-    try:
-        followers = Follow.objects.get(user=request.user).author.all()
-    except ObjectDoesNotExist:
-        followers = ''
-    '''
+    followers = request.user.follower.all().values('author')
 
     """получение постов вышеполученных авторов"""
     posts = Post.objects.filter(author__in=followers)
@@ -163,9 +156,9 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     """авторизованный юзер, который подписывается на авторов"""
-    try:
-        login_user = Follow.objects.get(user=request.user)
-    except ObjectDoesNotExist:
+    login_user = Follow.objects.filter(user=request.user).first()
+
+    if not login_user:
         login_user = Follow.objects.create(user=request.user)
 
     """автор на которого надо подписаться"""
@@ -179,5 +172,12 @@ def profile_follow(request, username):
 @login_required
 def profile_unfollow(request, username):
     """Отписаться от автора"""
-    ...
+    login_user = Follow.objects.filter(user=request.user).first()
+
+    """автор от которого надо отписаться"""
+    add_user = get_object_or_404(User, username=username)
+
+    login_user.author.remove(add_user)
+
+    return redirect('posts:profile', username)
 
