@@ -223,9 +223,15 @@ class FollowPagesTests(TestCase):
         """создание юзеров"""
         cls.user_follower = User.objects.create_user(username='UserFollower')
         cls.user_author = User.objects.create_user(username='UserAuthor')
+        # cls.user_not = User.objects.create_user(username='UserAuthor')
+
+        """создание записи автора"""
+        cls.post = Post.objects.create(
+            text='Post of Author',
+            author=cls.user_author
+        )
 
     def setUp(self):
-        # self.guest_client = Client()
         self.authorized_client = Client()
         user_follower = FollowPagesTests.user_follower
         self.authorized_client.force_login(user_follower)
@@ -237,6 +243,27 @@ class FollowPagesTests(TestCase):
 
         self.authorized_client.get(reverse('posts:profile_unfollow', kwargs={'username': self.user_author}))
         self.assertFalse(self.user_author.following.filter(user=self.user_follower).exists())
+
+    def test_follow_index(self):
+        """Новая запись пользователя появляется в ленте тех,
+        кто на него подписан и не появляется в ленте тех,
+        кто не подписан."""
+
+        """фолловер подписывается на автора"""
+        self.authorized_client.get(reverse('posts:profile_follow', kwargs={'username': self.user_author}))
+
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response.context['page_obj']), 1)
+
+        """фолловер отписывается от автора"""
+        self.authorized_client.get(reverse('posts:profile_unfollow', kwargs={'username': self.user_author}))
+
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response.context['page_obj']), 0)
+
+
+
+
 
 
 
