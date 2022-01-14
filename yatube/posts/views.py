@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render, redirect
-from django.views.decorators.cache import cache_page
+
 
 from .forms import CommentForm, PostForm
 from .models import Follow, Group, Post
@@ -49,16 +50,18 @@ def profile(request, username):
 
     author = get_object_or_404(User, username=username)
     posts = author.posts.all()
-
     page_obj = page_paginator(posts, request)
 
-    """получение фолловеров авторизованного юзера"""
-    followers = Follow.objects.get(user=request.user).author.all()
+    """проверка является ли текущий юзер анонимным или нет"""
+    if request.user.is_authenticated:
+        following = author.following.filter(user=request.user).exists()
+    else:
+        following = False
 
     context = {'author': author,
                'page_obj': page_obj,
                'count_post_author': author.posts.count(),
-               'following': author in followers}
+               'following': following}
 
     return render(request, template, context)
 
@@ -137,8 +140,16 @@ def post_edit(request, post_id):
 def follow_index(request):
     template = 'posts/follow.html'
 
+    followers = request.user.follower.all().values('author')
+
+    '''
     """получение авторов на которых подписан авторизованный юзер"""
-    followers = Follow.objects.get(user=request.user).author.all()
+    try:
+        followers = Follow.objects.get(user=request.user).author.all()
+    except ObjectDoesNotExist:
+        followers = ''
+    '''
+
     """получение постов вышеполученных авторов"""
     posts = Post.objects.filter(author__in=followers)
 
@@ -151,16 +162,18 @@ def follow_index(request):
 
 @login_required
 def profile_follow(request, username):
+    """авторизованный юзер, который подписывается на авторов"""
+    try:
+        login_user = Follow.objects.get(user=request.user)
+    except ObjectDoesNotExist:
+        login_user = Follow.objects.create(user=request.user)
 
-    add_user = username
-    user = Follow.objects.get(user=request.user)
-    print(add_user)
-    print(user.author.all())
-    #user.author.add(add_user)
-    print(user.author.all())
+    """автор на которого надо подписаться"""
+    add_user = get_object_or_404(User, username=username)
+
+    login_user.author.add(add_user)
 
     return redirect('posts:profile', username)
-
 
 
 @login_required
