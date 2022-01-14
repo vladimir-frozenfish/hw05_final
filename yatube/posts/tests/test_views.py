@@ -223,7 +223,6 @@ class FollowPagesTests(TestCase):
         """создание юзеров"""
         cls.user_follower = User.objects.create_user(username='UserFollower')
         cls.user_author = User.objects.create_user(username='UserAuthor')
-        # cls.user_not = User.objects.create_user(username='UserAuthor')
 
         """создание записи автора"""
         cls.post = Post.objects.create(

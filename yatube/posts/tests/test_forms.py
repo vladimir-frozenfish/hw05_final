@@ -108,3 +108,50 @@ class PostCreateFormTests(TestCase):
         self.assertRedirects(response, expected_url)
 
         self.assertEqual(Post.objects.count(), post_count)
+
+    def test_add_comment(self):
+        """добавление комментария к посту"""
+        comment_count = self.post.comments.count()
+
+        form_data = {
+            'text': 'Test comment',
+            'post': self.post,
+        }
+
+        response = self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
+            data=form_data,
+            follow=True
+        )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        self.assertRedirects(
+            response,
+            reverse('posts:post_detail', kwargs={'post_id': self.post.id})
+        )
+
+        self.assertEqual(self.post.comments.count(), comment_count + 1)
+
+    def test_add_comment_not_login_user(self):
+        """попытка добавления комментарий с неавторизованным юзером"""
+        comment_count = self.post.comments.count()
+
+        form_data = {
+            'text': 'Test comment',
+            'post': self.post,
+        }
+
+        response = self.guest_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
+            data=form_data,
+            follow=True
+        )
+
+        expected_url = (reverse('users:login')
+                        + "?next="
+                        + reverse('posts:add_comment', kwargs={'post_id': self.post.id}))
+
+        self.assertRedirects(response, expected_url)
+
+        self.assertEqual(self.post.comments.count(), comment_count)
