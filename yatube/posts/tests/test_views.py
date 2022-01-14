@@ -53,6 +53,7 @@ class PostsPagesTests(TestCase):
         )
 
     def setUp(self):
+        cache.clear()
         self.guest_client = Client()
         self.authorized_client = Client()
         user = PostsPagesTests.user
@@ -201,6 +202,7 @@ class PostsCacheTests(TestCase):
         )
 
     def setUp(self):
+        cache.clear()
         self.guest_client = Client()
 
     def test_cache_index(self):
@@ -245,6 +247,7 @@ class FollowPagesTests(TestCase):
         )
 
     def setUp(self):
+        cache.clear()
         self.authorized_client = Client()
         user_follower = FollowPagesTests.user_follower
         self.authorized_client.force_login(user_follower)

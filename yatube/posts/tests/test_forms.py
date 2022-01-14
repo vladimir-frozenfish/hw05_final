@@ -32,6 +32,7 @@ class PostCreateFormTests(TestCase):
         )
 
     def setUp(self):
+        cache.clear()
         self.guest_client = Client()
         self.authorized_client = Client()
         user = PostCreateFormTests.user
