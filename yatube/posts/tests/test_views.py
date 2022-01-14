@@ -252,7 +252,7 @@ class FollowPagesTests(TestCase):
         user_follower = FollowPagesTests.user_follower
         self.authorized_client.force_login(user_follower)
 
-    def test_follow_unfollow(self):
+    def test_follow(self):
         """тест подписки юзера на автора и отписки от него"""
         self.authorized_client.get(
             reverse('posts:profile_follow',
