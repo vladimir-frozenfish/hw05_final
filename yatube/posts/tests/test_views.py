@@ -203,14 +203,14 @@ class PostsCacheTests(TestCase):
         """удаление поста"""
         self.post.delete()
 
-        """получение запроса на главной странице 
+        """получение запроса на главной странице
         с уже удаленной записью из базы данных"""
         response = self.guest_client.get(reverse('posts:index'))
 
         """проверка, что кэш работает"""
         self.assertIn(self.post.text, response.content.decode('utf-8'))
 
-        """очистка кэша и проверка, что удаленной 
+        """очистка кэша и проверка, что удаленной
         записи нет на главной странице"""
         cache.clear()
         response = self.guest_client.get(reverse('posts:index'))
