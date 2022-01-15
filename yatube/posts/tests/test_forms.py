@@ -1,14 +1,22 @@
+import shutil
+import tempfile
+
 from http import HTTPStatus
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.cache import cache
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from ..models import Group, Post
 
 User = get_user_model()
 
+TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
+
+@override_settings(MEDIA_ROOT=TEMP_MEDIA_ROOT)
 class PostCreateFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -26,10 +34,14 @@ class PostCreateFormTests(TestCase):
 
         """создание поста"""
         cls.post = Post.objects.create(
-            # id=2,
             text='TestPost',
             author=cls.user,
         )
+
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
         cache.clear()
@@ -42,17 +54,28 @@ class PostCreateFormTests(TestCase):
         """создание нового поста"""
         post_count = Post.objects.count()
 
+        small_gif = (
+            b'\x47\x49\x46\x38\x39\x61\x01\x00'
+            b'\x01\x00\x00\x00\x00\x21\xf9\x04'
+            b'\x01\x0a\x00\x01\x00\x2c\x00\x00'
+            b'\x00\x00\x01\x00\x01\x00\x00\x02'
+            b'\x02\x4c\x01\x00\x3b'
+        )
+        uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
         form_data = {
-            # 'id': 1,
             'text': 'Test text',
             'group': self.group.id,
+            'image': uploaded,
         }
 
-        cache.clear()
         response = self.authorized_client.post(
             reverse('posts:post_create'),
             data=form_data,
-            follow=True
+            follow=True,
         )
 
         self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -67,6 +90,7 @@ class PostCreateFormTests(TestCase):
         self.assertTrue(Post.objects.filter(text=form_data['text']).exists())
         self.assertTrue(Post.objects.filter(group=self.group).exists())
         self.assertTrue(Post.objects.filter(author=self.user).exists())
+        self.assertTrue(Post.objects.filter(image='posts/small.gif').exists())
 
     def test_edit_post(self):
         """редактирование существующего поста"""
