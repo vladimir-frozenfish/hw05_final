@@ -64,7 +64,14 @@ class PostsURLTests(TestCase):
         c использованием словаря"""
         page_redirect = {
             '/create/': '/auth/login/?next=%2Fcreate%2F',
-            f'/posts/{self.post.id}/edit/': f'/posts/{self.post.id}/'
+            f'/posts/{self.post.id}/edit/': f'/posts/{self.post.id}/',
+            f'/posts/{self.post.id}/comment/':
+                f'/auth/login/?next=/posts/{self.post.id}/comment/',
+            '/follow/': '/auth/login/?next=/follow/',
+            f'/profile/{self.user}/follow/':
+                f'/auth/login/?next=/profile/{self.user}/follow/',
+            f'/profile/{self.user}/unfollow/':
+                f'/auth/login/?next=/profile/{self.user}/unfollow/',
         }
 
         for url, redirect in page_redirect.items():
@@ -78,6 +85,10 @@ class PostsURLTests(TestCase):
         page_status = {
             '/create/': HTTPStatus.OK,
             f'/posts/{self.post.id}/edit/': HTTPStatus.OK,
+            f'/posts/{self.post.id}/comment/': HTTPStatus.FOUND,
+            '/follow/': HTTPStatus.OK,
+            f'/profile/{self.user_2}/follow/': HTTPStatus.FOUND,
+            f'/profile/{self.user_2}/unfollow/': HTTPStatus.FOUND
         }
 
         for url, status_page in page_status.items():
@@ -101,6 +112,7 @@ class PostsURLTests(TestCase):
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html'
         }
 
         for url, template in templates_url_names.items():
