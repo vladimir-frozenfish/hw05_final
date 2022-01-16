@@ -52,7 +52,7 @@ def profile(request, username):
     posts = author.posts.all()
     page_obj = page_paginator(posts, request)
 
-    """проверка является ли текущий юзер анонимным или нет"""
+    # проверка является ли текущий юзер анонимным или нет
     if request.user.is_authenticated:
         following = author.following.filter(user=request.user).exists()
     else:
@@ -139,11 +139,11 @@ def post_edit(request, post_id):
 def follow_index(request):
     template = 'posts/follow.html'
 
-    """получение авторов на которых подписан авторизованный юзер"""
+    # получение авторов на которых подписан авторизованный юзер
     user = get_object_or_404(User, username=request.user)
     followers = user.follower.all().values('author')
 
-    """получение постов вышеполученных авторов"""
+    # получение постов вышеполученных авторов
     posts = Post.objects.filter(author__in=followers)
 
     page_obj = page_paginator(posts, request)

@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from django import forms
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -6,7 +7,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 
-from ..models import Group, Post
+from ..models import Follow, Group, Post
 
 User = get_user_model()
 
@@ -16,36 +17,36 @@ class PostsPagesTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        """количество постов с первой группой"""
+        # количество постов с первой группой
         cls.count_post_group = 14
 
-        """количество постов с авторстом первого юзера"""
+        # количество постов с авторстом первого юзера
         cls.count_post_author = 15
 
-        """создание первой тестовой группы"""
+        # создание первой тестовой группы
         cls.group = Group.objects.create(
             title='TestGroup',
             slug='TestGroup',
             description='TestGroup for test',
         )
 
-        """создание второй тестовой группы"""
+        # создание второй тестовой группы
         cls.group2 = Group.objects.create(
             title='TestGroup2',
             slug='TestGroup2',
             description='TestGroup2 for test',
         )
 
-        """создание юзера"""
+        # создание юзера
         cls.user = User.objects.create_user(username='TestName')
 
-        """создание постов с первой группой"""
+        # создание постов с первой группой
         posts = ([Post(text='TestPost post for testing',
                        author=cls.user, group=cls.group)]
                  * cls.count_post_group)
         Post.objects.bulk_create(posts)
 
-        """создание поста с тестовой группой 2"""
+        # создание поста с тестовой группой 2
         cls.post2 = Post.objects.create(
             text='Post for testing TestGroup2',
             author=cls.user,
@@ -208,20 +209,20 @@ class PostsCacheTests(TestCase):
     def test_cache_index(self):
         """тестирование кэша главной страницы"""
 
-        """очистка кэша от предыдущих тестов"""
+        # очистка кэша от предыдущих тестов
         cache.clear()
 
-        """запрос на страницу с новой записью"""
+        # запрос на страницу с новой записью
         self.guest_client.get(reverse('posts:index'))
 
-        """удаление поста"""
+        # удаление поста
         self.post.delete()
 
         """получение запроса на главной странице
         с уже удаленной записью из базы данных"""
         response = self.guest_client.get(reverse('posts:index'))
 
-        """проверка, что кэш работает"""
+        # проверка, что кэш работает
         self.assertIn(self.post.text, response.content.decode('utf-8'))
 
         """очистка кэша и проверка, что удаленной
@@ -236,15 +237,9 @@ class FollowPagesTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-        """создание юзеров"""
+        # создание юзеров
         cls.user_follower = User.objects.create_user(username='UserFollower')
         cls.user_author = User.objects.create_user(username='UserAuthor')
-
-        """создание записи автора"""
-        cls.post = Post.objects.create(
-            text='Post of Author',
-            author=cls.user_author
-        )
 
     def setUp(self):
         cache.clear()
@@ -252,64 +247,85 @@ class FollowPagesTests(TestCase):
         user_follower = FollowPagesTests.user_follower
         self.authorized_client.force_login(user_follower)
 
-    def test_follow(self):
+    def test_follow_unfollow(self):
         """тест подписки юзера на автора и отписки от него"""
-        self.authorized_client.get(
+        follower_count = self.user_follower.follower.count()
+
+        # подписка на автора
+        response = self.authorized_client.get(
             reverse('posts:profile_follow',
                     kwargs={'username': self.user_author}))
+
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertTrue(
             self.user_author.following.filter(
                 user=self.user_follower
             ).exists()
         )
+        self.assertEqual(self.user_follower.follower.count(),
+                         follower_count + 1)
 
-    def test_unfollow(self):
-        """тест отписки от автора"""
-        self.authorized_client.get(
-            reverse('posts:profile_follow',
-                    kwargs={'username': self.user_author}))
-        self.authorized_client.get(
+        # отписка от автора
+        response = self.authorized_client.get(
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.user_author}))
+
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertFalse(
             self.user_author.following.filter(
                 user=self.user_follower
             ).exists())
+        self.assertEqual(self.user_follower.follower.count(),
+                         follower_count)
 
     def test_follow_himself(self):
         """тест подписки юзера на самого себя"""
-        self.authorized_client.get(
+        follower_count = self.user_follower.follower.count()
+
+        response = self.authorized_client.get(
             reverse('posts:profile_follow',
                     kwargs={'username': self.user_follower}))
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertFalse(
             self.user_follower.following.filter(
                 user=self.user_follower
             ).exists()
         )
+        self.assertEqual(self.user_follower.follower.count(),
+                         follower_count)
 
     def test_follow_index(self):
         """Новая запись пользователя появляется в ленте тех,
-        кто на него подписан и не появляется в ленте тех,
-        кто не подписан."""
+        кто на него подписан"""
 
-        """фолловер подписывается на автора"""
+        # фолловер подписывается на автора
+        Follow.objects.create(
+            user=self.user_follower,
+            author=self.user_author
+        )
+        # создание записи автора
+        Post.objects.create(
+            text='Post of Author',
+            author=self.user_author
+        )
+
         self.authorized_client.get(
             reverse(
                 'posts:profile_follow', kwargs={'username': self.user_author})
         )
 
-        cache.clear()
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 1)
 
-        """фолловер отписывается от автора"""
-        self.authorized_client.get(
-            reverse(
-                'posts:profile_unfollow',
-                kwargs={'username': self.user_author}
-            )
+    def test_follow_index(self):
+        """Новая запись пользователя не появляется в ленте тех,
+        кто не подписан."""
+
+        # создание записи автора
+        Post.objects.create(
+            text='Post of Author',
+            author=self.user_author
         )
 
-        cache.clear()
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 0)
