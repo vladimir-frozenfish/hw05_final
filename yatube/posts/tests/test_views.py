@@ -247,11 +247,10 @@ class FollowPagesTests(TestCase):
         user_follower = FollowPagesTests.user_follower
         self.authorized_client.force_login(user_follower)
 
-    def test_follow_unfollow(self):
-        """тест подписки юзера на автора и отписки от него"""
+    def test_follow(self):
+        """тест подписки юзера на автора"""
         follower_count = self.user_follower.follower.count()
 
-        # подписка на автора
         response = self.authorized_client.get(
             reverse('posts:profile_follow',
                     kwargs={'username': self.user_author}))
@@ -265,7 +264,13 @@ class FollowPagesTests(TestCase):
         self.assertEqual(self.user_follower.follower.count(),
                          follower_count + 1)
 
-        # отписка от автора
+    def test_unfollow(self):
+        """тест отписки юзера от автора"""
+        Follow.objects.create(
+            user=self.user_follower,
+            author=self.user_author
+        )
+        follower_count = self.user_follower.follower.count()
         response = self.authorized_client.get(
             reverse('posts:profile_unfollow',
                     kwargs={'username': self.user_author}))
@@ -276,7 +281,7 @@ class FollowPagesTests(TestCase):
                 user=self.user_follower
             ).exists())
         self.assertEqual(self.user_follower.follower.count(),
-                         follower_count)
+                         follower_count - 1)
 
     def test_follow_himself(self):
         """тест подписки юзера на самого себя"""
@@ -308,16 +313,14 @@ class FollowPagesTests(TestCase):
             text='Post of Author',
             author=self.user_author
         )
-
-        self.authorized_client.get(
-            reverse(
-                'posts:profile_follow', kwargs={'username': self.user_author})
+        Follow.objects.create(
+            user=self.user_follower,
+            author=self.user_author
         )
-
         response = self.authorized_client.get(reverse('posts:follow_index'))
         self.assertEqual(len(response.context['page_obj']), 1)
 
-    def test_follow_index(self):
+    def test_follow_index_not_follower(self):
         """Новая запись пользователя не появляется в ленте тех,
         кто не подписан."""
 
