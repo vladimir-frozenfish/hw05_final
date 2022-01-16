@@ -84,7 +84,7 @@ class Follow(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name='following',
-        verbose_name='Автор_на_которого_подписывается'
+        verbose_name='Автор на которого подписывается'
     )
 
     class Meta:

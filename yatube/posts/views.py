@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render, redirect
 
-
 from .forms import CommentForm, PostForm
 from .models import Follow, Group, Post
 
@@ -25,7 +24,6 @@ def index(request):
     posts = Post.objects.all()
 
     page_obj = page_paginator(posts, request)
-
     context = {'page_obj': page_obj}
 
     return render(request, template, context)
@@ -38,10 +36,10 @@ def group_posts(request, slug):
     posts = group.posts.all()
 
     page_obj = page_paginator(posts, request)
-
-    context = {'group': group,
-               'page_obj': page_obj}
-
+    context = {
+        'group': group,
+        'page_obj': page_obj
+    }
     return render(request, template, context)
 
 
@@ -53,16 +51,14 @@ def profile(request, username):
     page_obj = page_paginator(posts, request)
 
     # проверка является ли текущий юзер анонимным или нет
-    if request.user.is_authenticated:
-        following = author.following.filter(user=request.user).exists()
-    else:
-        following = False
-
-    context = {'author': author,
-               'page_obj': page_obj,
-               'count_post_author': author.posts.count(),
-               'following': following}
-
+    following = (request.user.is_authenticated
+                 and author.following.filter(user=request.user).exists())
+    context = {
+        'author': author,
+        'page_obj': page_obj,
+        'count_post_author': author.posts.count(),
+        'following': following
+    }
     return render(request, template, context)
 
 
@@ -88,11 +84,12 @@ def post_detail(request, post_id):
     comments = post.comments.all()
 
     form = CommentForm(request.POST or None)
-
-    context = {'post': post,
-               'count_post_author': count_post_author,
-               'comments': comments,
-               'form': form}
+    context = {
+        'post': post,
+        'count_post_author': count_post_author,
+        'comments': comments,
+        'form': form
+    }
     return render(request, template, context)
 
 
@@ -102,12 +99,10 @@ def post_create(request):
 
     form = PostForm(request.POST or None,
                     files=request.FILES or None)
-
     if form.is_valid():
         saving = form.save(commit=False)
         saving.author = request.user
         saving.save()
-
         return redirect('posts:profile', request.user)
 
     context = {'form': form}
@@ -124,14 +119,12 @@ def post_edit(request, post_id):
     form = PostForm(request.POST or None,
                     files=request.FILES or None,
                     instance=post)
-
     if form.is_valid():
         form.save()
         return redirect('posts:post_detail', post_id=post.id)
 
     context = {'form': form,
                'is_edit': True}
-
     return render(request, template, context)
 
 
@@ -147,7 +140,6 @@ def follow_index(request):
     posts = Post.objects.filter(author__in=followers)
 
     page_obj = page_paginator(posts, request)
-
     context = {'page_obj': page_obj}
 
     return render(request, template, context)
@@ -171,7 +163,7 @@ def profile_follow(request, username):
 def profile_unfollow(request, username):
     author = get_object_or_404(User, username=username)
 
-    user = Follow.objects.get(user=request.user, author=author)
-    user.delete()
+    follow = Follow.objects.get(user=request.user, author=author)
+    follow.delete()
 
     return redirect('posts:profile', username)
